@@ -1,0 +1,21 @@
+PODS:
+  - ImageUtils (0.0.5)
+  - VideoEffects (0.0.27):
+    - ImageUtils
+
+DEPENDENCIES:
+  - ImageUtils (= 0.0.5)
+  - VideoEffects (= 0.0.27)
+
+SPEC REPOS:
+  https://github.com/jonbrennecke/private-pod-specs.git:
+    - ImageUtils
+    - VideoEffects
+
+SPEC CHECKSUMS:
+  ImageUtils: b0e9b9777b22c7a5e4263b29fd23aa65cf0e184b
+  VideoEffects: 2ae663682496b44e94e4d02bb07f343186c263ed
+
+PODFILE CHECKSUM: 50b6458801e54db6682a5fdbab47db0a02057ba1
+
+COCOAPODS: 1.8.4
