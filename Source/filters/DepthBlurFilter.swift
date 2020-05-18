@@ -46,7 +46,7 @@ public class DepthBlurFilter: CompositorFilter {
         qualityFactor: 0.025
       )
     }
-    
+
     return nil
   }
 }

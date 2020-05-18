@@ -70,7 +70,7 @@ open class CameraEffectView: MTKView {
     contentScaleFactor = UIScreen.main.scale
   }
 
-  required public init(coder _: NSCoder) {
+  public required init(coder _: NSCoder) {
     fatalError("init(coder:) has not been implemented")
   }
 
@@ -84,7 +84,7 @@ open class CameraEffectView: MTKView {
     super.didMoveToSuperview()
     drawableSize = frame.size
   }
-  
+
   public override func layoutSubviews() {
     super.layoutSubviews()
     drawableSize = frame.size
