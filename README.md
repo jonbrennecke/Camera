@@ -1,7 +1,6 @@
-Camera
----
+## Camera
 
-Swift camera utilities with depth/disparity capture and portrait effects.
+Swift camera utilities with depth/disparity capture and _portrait mode_ effects.
 
 This library is designed around exposing unique camera features such as:
 
@@ -44,7 +43,7 @@ Camera.requestCameraPermissions { success in
 
 This library uses `EffectPlayerView` from [VideoEffects](https://github.com/jonbrennecke/VideoEffects). See the documentation of that library for more details.
 
-The `DepthBlurFilter` is a custom filter for `EffectPlayerView` that let's you play video with depth effects. 
+The `DepthBlurFilter` is a custom filter for `EffectPlayerView` that let's you play video with depth effects.
 
 Use it like this:
 
