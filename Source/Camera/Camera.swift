@@ -10,7 +10,6 @@ private let videoMaxFramesPerSecond = Int(30)
 private let maxSimultaneousFrames: Int = 3
 
 public class Camera: NSObject {
-  
   public enum State {
     case none
     case stopped(startTime: CMTime, endTime: CMTime)
@@ -31,7 +30,7 @@ public class Camera: NSObject {
     var zoom: Float
     var resolution: CameraResolutionPreset
     var position: AVCaptureDevice.Position
-    
+
     init(
       depth: Bool,
       zoom: Float,
@@ -49,24 +48,36 @@ public class Camera: NSObject {
     depth: false, zoom: 1.0, resolution: .hd720p, position: .front // TODO: save defaults as constants
   )
 
-  /// MARK - queues
-  
+  private func safelyWriteInternalState(_ callback: @escaping () -> Void) {
+    cameraSetupQueue.async(flags: .barrier) {
+      callback()
+    }
+  }
+
+  private func safelyReadInternalState<T>(_ callback: () -> T) -> T {
+    return cameraSetupQueue.sync {
+      return callback()
+    }
+  }
+
+  // MARK: - queues
+
   fileprivate let cameraOutputQueue = DispatchQueue(
     label: "com.jonbrennecke.Camera.cameraOutputQueue",
     qos: .userInteractive
   )
-  
+
   fileprivate let cameraSetupQueue = DispatchQueue(
     label: "com.jonbrennecke.Camera.cameraSetupQueue",
     qos: .background,
     attributes: .concurrent
   )
-  
+
   fileprivate let assetWriterQueue = DispatchQueue(
     label: "com.jonbrennecke.Camera.assetWriterQueue",
     qos: .background
   )
-  
+
   private var outputSynchronizer: AVCaptureDataOutputSynchronizer?
   private var paused = false
 
@@ -142,10 +153,15 @@ public class Camera: NSObject {
     return Size(width: width, height: height)
   }
 
-  public var zoom: Float = 1.0 {
-    didSet {
-      cameraSetupQueue.async { [weak self] in
-        self?.updateZoom()
+  public var zoom: Float {
+    get {
+      return safelyReadInternalState {
+        return unsafeInternalState.zoom
+      }
+    }
+    set {
+      safelyWriteInternalState { [weak self] in
+        self?.unsafeUpdateZoom()
       }
     }
   }
@@ -154,7 +170,7 @@ public class Camera: NSObject {
     guard let videoCaptureDevice = videoCaptureDevice else {
       return (min: 1.0, max: 1.0)
     }
-    if depth {
+    if unsafeInternalState.depth {
       let min = Float(videoCaptureDevice.activeFormat.videoMinZoomFactorForDepthDataDelivery)
       let max = Float(videoCaptureDevice.activeFormat.videoMaxZoomFactorForDepthDataDelivery)
       return (min, max)
@@ -162,35 +178,45 @@ public class Camera: NSObject {
     let max = Float(videoCaptureDevice.activeFormat.videoMaxZoomFactor)
     return (min: 1.0, max)
   }
-  
+
   public var depth: Bool {
     get {
-      return cameraSetupQueue.sync {
+      return safelyReadInternalState {
         return unsafeInternalState.depth
       }
     }
     set {
-      cameraSetupQueue.async(flags: .barrier) { [weak self] in
+      safelyWriteInternalState { [weak self] in
         self?.unsafeInternalState.depth = newValue
-        self?.resetCamera()
+        self?.unsafeResetCamera()
       }
     }
   }
 
-  public var resolution: CameraResolutionPreset = .hd720p {
-    didSet {
-      cameraSetupQueue.async { [weak self] in
-        guard let strongSelf = self else { return }
-        strongSelf.resetCamera()
+  public var resolution: CameraResolutionPreset {
+    get {
+      return safelyReadInternalState {
+        return unsafeInternalState.resolution
+      }
+    }
+    set {
+      safelyWriteInternalState { [weak self] in
+        self?.unsafeInternalState.resolution = newValue
+        self?.unsafeResetCamera()
       }
     }
   }
 
-  public var position: AVCaptureDevice.Position = .front {
-    didSet {
-      cameraSetupQueue.async { [weak self] in
-        guard let strongSelf = self else { return }
-        strongSelf.resetCamera()
+  public var position: AVCaptureDevice.Position {
+    get {
+      return safelyReadInternalState {
+        return unsafeInternalState.position
+      }
+    }
+    set {
+      safelyWriteInternalState { [weak self] in
+        self?.unsafeInternalState.position = newValue
+        self?.unsafeResetCamera()
       }
     }
   }
@@ -214,10 +240,10 @@ public class Camera: NSObject {
     callback(videoCaptureDevice)
   }
 
-  private func updateZoom() {
+  private func unsafeUpdateZoom() {
     withLockedVideoCaptureDevice { device in
       let (min, max) = supportedZoomRange
-      let clampedZoom = clamp(zoom, min: min, max: max)
+      let clampedZoom = clamp(unsafeInternalState.zoom, min: min, max: max)
       device.videoZoomFactor = CGFloat(clampedZoom)
     }
   }
@@ -235,9 +261,9 @@ public class Camera: NSObject {
     }
   }
 
-  private func setupAssetWriter(to outputURL: URL) -> Bool {
+  private func unsafeSetupAssetWriter(to outputURL: URL) -> Bool {
     assetWriter = VideoWriter()
-    if depth, let depthSize = depthResolution {
+    if unsafeInternalState.depth, let depthSize = depthResolution {
       assetWriterDepthInput = VideoWriterFrameBufferInput(
         videoSize: depthSize,
         pixelFormatType: kCVPixelFormatType_OneComponent8,
@@ -263,7 +289,7 @@ public class Camera: NSObject {
     else {
       return false
     }
-    if depth {
+    if unsafeInternalState.depth {
       guard
         let depthInput = assetWriterDepthInput,
         case .success = assetWriter.add(input: depthInput)
@@ -281,22 +307,16 @@ public class Camera: NSObject {
     }
   }
 
-  private func setupVideoCaptureDevice() -> Bool {
-    videoCaptureDevice = depth
-      ? depthEnabledCaptureDevice(withPosition: position)
-      : captureDevice(withPosition: position)
+  private func unsafeSetupVideoCaptureDevice() -> Bool {
+    videoCaptureDevice = unsafeInternalState.depth
+      ? depthEnabledCaptureDevice(withPosition: unsafeInternalState.position)
+      : captureDevice(withPosition: unsafeInternalState.position)
     return videoCaptureDevice != nil
   }
 
-  private func attemptToSetupCameraCaptureSession() -> Result<Void, CameraSetupError> {
-//    let setupSemaphore = DispatchSemaphore(value: 1)
-//    _ = setupSemaphore.wait(timeout: .distantFuture)
-//    defer {
-//      setupSemaphore.signal()
-//    }
-
-    setCaptureSessionPreset(withResolution: resolution)
-    if !setupVideoCaptureDevice() {
+  private func unsafeAttemptToSetupCameraCaptureSession() -> Result<Void, CameraSetupError> {
+    setCaptureSessionPreset(withResolution: unsafeInternalState.resolution)
+    if !unsafeSetupVideoCaptureDevice() {
       return .failure(.failedToSetupVideoCaptureDevice)
     }
 
@@ -308,14 +328,14 @@ public class Camera: NSObject {
       return .failure(.failedToSetupDepthOutput)
     }
 
-    if depth {
+    if unsafeInternalState.depth {
       if !setupDepthOutput() {
         return .failure(.failedToSetupDepthOutput)
       }
     }
 
-    configureActiveFormat()
-    outputSynchronizer = depth
+    unsafeConfigureActiveFormat()
+    outputSynchronizer = unsafeInternalState.depth
       ? AVCaptureDataOutputSynchronizer(
         dataOutputs: [videoOutput, depthOutput]
       )
@@ -327,30 +347,24 @@ public class Camera: NSObject {
   }
 
   private func setupVideoInput() -> Bool {
-    guard let videoCaptureDevice = videoCaptureDevice else {
-      return false
-    }
-    if case .some = try? videoCaptureDevice.lockForConfiguration() {
-      defer {
-        videoCaptureDevice.unlockForConfiguration()
-      }
-      if videoCaptureDevice.isExposureModeSupported(.continuousAutoExposure) {
-        videoCaptureDevice.exposureMode = .continuousAutoExposure
-      }
-    }
+    withLockedVideoCaptureDevice { device in
+      if device.isExposureModeSupported(.continuousAutoExposure) {
+        device.exposureMode = .continuousAutoExposure
 
-    // set up input
-    if let previousInput = videoCaptureDeviceInput {
-      captureSession.removeInput(previousInput)
-    }
-    videoCaptureDeviceInput = try? AVCaptureDeviceInput(device: videoCaptureDevice)
-    guard let videoCaptureDeviceInput = videoCaptureDeviceInput else {
-      return false
-    }
-    if captureSession.canAddInput(videoCaptureDeviceInput) {
-      captureSession.addInput(videoCaptureDeviceInput)
-    } else {
-      return false
+        if let previousInput = videoCaptureDeviceInput {
+          captureSession.removeInput(previousInput)
+        }
+        videoCaptureDeviceInput = try? AVCaptureDeviceInput(device: device)
+        guard let videoCaptureDeviceInput = videoCaptureDeviceInput else {
+          return
+        }
+        if captureSession.canAddInput(videoCaptureDeviceInput) {
+          captureSession.addInput(videoCaptureDeviceInput)
+        } else {
+          return
+        }
+        return
+      }
     }
     return true
   }
@@ -368,7 +382,7 @@ public class Camera: NSObject {
         if connection.isVideoOrientationSupported {
           connection.videoOrientation = .portrait
         }
-        if position == .front, connection.isVideoMirroringSupported {
+        if unsafeInternalState.position == .front, connection.isVideoMirroringSupported {
           connection.isVideoMirrored = true
         }
       }
@@ -441,22 +455,22 @@ public class Camera: NSObject {
     return true
   }
 
-  private func configureActiveFormat() {
+  private func unsafeConfigureActiveFormat() {
     withLockedVideoCaptureDevice { videoCaptureDevice in
       defer {
         configureDepthDataConverter()
       }
       let searchDescriptor = CameraFormatSearchDescriptor(
-        depthPixelFormatTypeRule: depth ? .oneOf([depthPixelFormat]) : .any,
-        depthDimensionsRule: depth
+        depthPixelFormatTypeRule: unsafeInternalState.depth ? .oneOf([depthPixelFormat]) : .any,
+        depthDimensionsRule: unsafeInternalState.depth
           ? .greaterThanOrEqualTo(Size<Int>(width: 640, height: 360))
           : .any,
-        videoDimensionsRule: .equalTo(resolution.landscapeSize),
+        videoDimensionsRule: .equalTo(unsafeInternalState.resolution.landscapeSize),
         frameRateRule: .greaterThanOrEqualTo(20),
         sortRule: .maximizeFrameRate,
         depthFormatSortRule: .maximizeDimensions
       )
-      defer { updateZoom() }
+      defer { unsafeUpdateZoom() }
       guard let searchResult = searchDescriptor.search(formats: videoCaptureDevice.formats) else {
         return
       }
@@ -477,11 +491,11 @@ public class Camera: NSObject {
       size: size,
       input: depthPixelFormat,
       output: kCVPixelFormatType_OneComponent8,
-      bounds: position == .front ? 0.1 ... 5 : 0 ... 0.75
+      bounds: unsafeInternalState.position == .front ? 0.1 ... 5 : 0 ... 0.75
     )
   }
 
-  private func resetCamera() {
+  private func unsafeResetCamera() {
     let isRunning = captureSession.isRunning
     if isRunning {
       captureSession.stopRunning()
@@ -493,7 +507,7 @@ public class Camera: NSObject {
     captureSession.beginConfiguration()
     captureSession.inputs.forEach { captureSession.removeInput($0) }
     captureSession.outputs.forEach { captureSession.removeOutput($0) }
-    if case let .failure(error) = attemptToSetupCameraCaptureSession() {
+    if case let .failure(error) = unsafeAttemptToSetupCameraCaptureSession() {
       print("Failed to set up camera capture session", error)
     }
     if !attemptToSetupAudioCaptureSession() {
@@ -591,17 +605,11 @@ public class Camera: NSObject {
   }
 
   public func setExposure(_ exposureBias: Float, _ completionHandler: @escaping () -> Void) {
-    guard let videoCaptureDevice = videoCaptureDevice else {
-      return completionHandler()
-    }
-    if case .some = try? videoCaptureDevice.lockForConfiguration() {
-      videoCaptureDevice.exposureMode = .locked
-      videoCaptureDevice.setExposureTargetBias(exposureBias) { _ in
+    withLockedVideoCaptureDevice { device in
+      device.exposureMode = .locked
+      device.setExposureTargetBias(exposureBias) { _ in
         completionHandler()
       }
-      videoCaptureDevice.unlockForConfiguration()
-    } else {
-      completionHandler()
     }
   }
 
@@ -609,7 +617,9 @@ public class Camera: NSObject {
     return videoCaptureDevice?.lensAperture ?? 0
   }
 
-  public func setupCameraCaptureSession(_ completionHandler: @escaping (Result<Void, CameraSetupError>) -> Void) {
+  public func setupCameraCaptureSession(
+    _ completionHandler: @escaping (Result<Void, CameraSetupError>) -> Void
+  ) {
     cameraSetupQueue.async { [weak self] in
       guard let strongSelf = self else { return } // TODO: return failure
       let isRunning = strongSelf.captureSession.isRunning
@@ -617,7 +627,7 @@ public class Camera: NSObject {
         strongSelf.captureSession.stopRunning()
       }
       strongSelf.captureSession.beginConfiguration()
-      if case let .failure(error) = strongSelf.attemptToSetupCameraCaptureSession() {
+      if case let .failure(error) = strongSelf.unsafeAttemptToSetupCameraCaptureSession() {
         return completionHandler(.failure(error))
       }
       if !strongSelf.attemptToSetupAudioCaptureSession() {
@@ -667,7 +677,7 @@ public class Camera: NSObject {
       }
       do {
         let outputURL = try makeEmptyVideoOutputFile()
-        guard strongSelf.setupAssetWriter(to: outputURL) else {
+        guard strongSelf.unsafeSetupAssetWriter(to: outputURL) else {
           completionHandler(nil, false)
           return
         }
