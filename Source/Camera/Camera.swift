@@ -521,10 +521,7 @@ public class Camera: NSObject {
   }
 
   public func focus(on point: CGPoint) {
-    guard let device = videoCaptureDevice else {
-      return
-    }
-    if case .some = try? device.lockForConfiguration() {
+    withLockedVideoCaptureDevice { device in
       // set focus point
       if device.isFocusPointOfInterestSupported {
         device.focusPointOfInterest = point
@@ -532,7 +529,11 @@ public class Camera: NSObject {
           device.focusMode = .autoFocus
         }
       }
-
+    }
+  }
+  
+  public func exposure(on point: CGPoint) {
+    withLockedVideoCaptureDevice { device in
       // set exposure point
       if device.isExposurePointOfInterestSupported {
         device.exposurePointOfInterest = point
@@ -540,8 +541,6 @@ public class Camera: NSObject {
           device.exposureMode = .autoExpose
         }
       }
-
-      device.unlockForConfiguration()
     }
   }
 
