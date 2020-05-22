@@ -10,6 +10,7 @@ private let videoMaxFramesPerSecond = Int(30)
 private let maxSimultaneousFrames: Int = 3
 
 public class Camera: NSObject {
+  
   public enum State {
     case none
     case stopped(startTime: CMTime, endTime: CMTime)
@@ -25,20 +26,49 @@ public class Camera: NSObject {
     case failedToSetupDepthOutput
   }
 
-  private var paused = false
-  private let cameraOutputQueue = DispatchQueue(
-    label: "com.jonbrennecke.CameraManager.cameraOutputQueue",
+  private class UnsafeInternalState {
+    var depth: Bool
+    var zoom: Float
+    var resolution: CameraResolutionPreset
+    var position: AVCaptureDevice.Position
+    
+    init(
+      depth: Bool,
+      zoom: Float,
+      resolution: CameraResolutionPreset,
+      position: AVCaptureDevice.Position
+    ) {
+      self.depth = depth
+      self.zoom = zoom
+      self.resolution = resolution
+      self.position = position
+    }
+  }
+
+  private var unsafeInternalState: UnsafeInternalState = UnsafeInternalState(
+    depth: false, zoom: 1.0, resolution: .hd720p, position: .front // TODO: save defaults as constants
+  )
+
+  /// MARK - queues
+  
+  fileprivate let cameraOutputQueue = DispatchQueue(
+    label: "com.jonbrennecke.Camera.cameraOutputQueue",
     qos: .userInteractive
   )
-  private let cameraSetupQueue = DispatchQueue(
-    label: "com.jonbrennecke.CameraManager.cameraSetupQueue",
+  
+  fileprivate let cameraSetupQueue = DispatchQueue(
+    label: "com.jonbrennecke.Camera.cameraSetupQueue",
+    qos: .background,
+    attributes: .concurrent
+  )
+  
+  fileprivate let assetWriterQueue = DispatchQueue(
+    label: "com.jonbrennecke.Camera.assetWriterQueue",
     qos: .background
   )
-  private let assetWriterQueue = DispatchQueue(
-    label: "com.jonbrennecke.CameraManager.assetWriterQueue",
-    qos: .background
-  )
+  
   private var outputSynchronizer: AVCaptureDataOutputSynchronizer?
+  private var paused = false
 
   // video
   private var videoCaptureDevice: AVCaptureDevice?
@@ -132,12 +162,17 @@ public class Camera: NSObject {
     let max = Float(videoCaptureDevice.activeFormat.videoMaxZoomFactor)
     return (min: 1.0, max)
   }
-
-  public var depth: Bool = false {
-    didSet {
-      cameraSetupQueue.async { [weak self] in
-        guard let strongSelf = self else { return }
-        strongSelf.resetCamera()
+  
+  public var depth: Bool {
+    get {
+      return cameraSetupQueue.sync {
+        return unsafeInternalState.depth
+      }
+    }
+    set {
+      cameraSetupQueue.async(flags: .barrier) { [weak self] in
+        self?.unsafeInternalState.depth = newValue
+        self?.resetCamera()
       }
     }
   }
@@ -254,6 +289,12 @@ public class Camera: NSObject {
   }
 
   private func attemptToSetupCameraCaptureSession() -> Result<Void, CameraSetupError> {
+//    let setupSemaphore = DispatchSemaphore(value: 1)
+//    _ = setupSemaphore.wait(timeout: .distantFuture)
+//    defer {
+//      setupSemaphore.signal()
+//    }
+
     setCaptureSessionPreset(withResolution: resolution)
     if !setupVideoCaptureDevice() {
       return .failure(.failedToSetupVideoCaptureDevice)
