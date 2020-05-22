@@ -46,6 +46,7 @@ class ViewController: UIViewController {
     camera.depthEnabled = false
     camera.position = .back
     camera.resolutionPreset = .vga // TODO: rename to "resolution"
+    camera.zoom = 5.0
 
     // start preview
     Camera.requestCameraPermissions { success in

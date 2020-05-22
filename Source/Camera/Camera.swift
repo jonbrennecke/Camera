@@ -111,6 +111,29 @@ public class Camera: NSObject {
     }
     return Size(width: width, height: height)
   }
+  
+  public var zoom: Float = 1.0 {
+    didSet {
+      cameraSetupQueue.async { [weak self] in
+        self?.updateZoom()
+      }
+    }
+  }
+  
+  public var supportedZoomRange: (min: Float, max: Float) {
+    get {
+      guard let videoCaptureDevice = videoCaptureDevice else {
+        return (min: 1.0, max: 1.0)
+      }
+      if depthEnabled {
+        let min = Float(videoCaptureDevice.activeFormat.videoMinZoomFactorForDepthDataDelivery)
+        let max = Float(videoCaptureDevice.activeFormat.videoMaxZoomFactorForDepthDataDelivery)
+        return (min, max)
+      }
+      let max = Float(videoCaptureDevice.activeFormat.videoMaxZoomFactor)
+      return (min: 1.0, max)
+    }
+  }
 
   public var depthEnabled: Bool = false {
     didSet {
@@ -142,6 +165,27 @@ public class Camera: NSObject {
   deinit {
     for _ in 0 ..< maxSimultaneousFrames {
       outputSemaphore.signal()
+    }
+  }
+  
+  private func withLockedVideoCaptureDevice(_ callback: (AVCaptureDevice) -> Void) {
+    guard
+      let videoCaptureDevice = videoCaptureDevice,
+      case .some = try? videoCaptureDevice.lockForConfiguration()
+    else {
+      return
+    }
+    defer {
+      videoCaptureDevice.unlockForConfiguration()
+    }
+    callback(videoCaptureDevice)
+  }
+  
+  private func updateZoom() {
+    withLockedVideoCaptureDevice { device in
+      let (min, max) = supportedZoomRange
+      let clampedZoom = clamp(zoom, min: min, max: max)
+      device.videoZoomFactor = CGFloat(clampedZoom)
     }
   }
 
@@ -359,12 +403,8 @@ public class Camera: NSObject {
   }
 
   private func configureActiveFormat() {
-    guard let videoCaptureDevice = videoCaptureDevice else {
-      return
-    }
-    if case .some = try? videoCaptureDevice.lockForConfiguration() {
+    withLockedVideoCaptureDevice { videoCaptureDevice in
       defer {
-        videoCaptureDevice.unlockForConfiguration()
         configureDepthDataConverter()
       }
       let searchDescriptor = CameraFormatSearchDescriptor(
@@ -377,12 +417,12 @@ public class Camera: NSObject {
         sortRule: .maximizeFrameRate,
         depthFormatSortRule: .maximizeDimensions
       )
+      defer { updateZoom() }
       guard let searchResult = searchDescriptor.search(formats: videoCaptureDevice.formats) else {
         return
       }
       videoCaptureDevice.activeFormat = searchResult.format
       videoCaptureDevice.activeDepthDataFormat = searchResult.depthDataFormat
-      videoCaptureDevice.videoZoomFactor = searchResult.format.videoMinZoomFactorForDepthDataDelivery
       videoCaptureDevice.activeVideoMinFrameDuration = CMTime(value: 1, timescale: CMTimeScale(videoMinFramesPerSecond))
       videoCaptureDevice.activeVideoMaxFrameDuration = CMTime(value: 1, timescale: CMTimeScale(videoMaxFramesPerSecond))
       videoCaptureDevice
