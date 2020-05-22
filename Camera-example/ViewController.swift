@@ -43,7 +43,7 @@ class ViewController: UIViewController {
     view.insertSubview(cameraView, at: 0)
 
     // set up camera
-    camera.depthEnabled = false
+    camera.depth = false
     camera.position = .back
     camera.resolutionPreset = .vga // TODO: rename to "resolution"
     camera.zoom = 5.0

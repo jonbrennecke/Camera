@@ -125,7 +125,7 @@ public class Camera: NSObject {
       guard let videoCaptureDevice = videoCaptureDevice else {
         return (min: 1.0, max: 1.0)
       }
-      if depthEnabled {
+      if depth {
         let min = Float(videoCaptureDevice.activeFormat.videoMinZoomFactorForDepthDataDelivery)
         let max = Float(videoCaptureDevice.activeFormat.videoMaxZoomFactorForDepthDataDelivery)
         return (min, max)
@@ -135,7 +135,7 @@ public class Camera: NSObject {
     }
   }
 
-  public var depthEnabled: Bool = false {
+  public var depth: Bool = false {
     didSet {
       cameraSetupQueue.async { [weak self] in
         guard let strongSelf = self else { return }
@@ -204,7 +204,7 @@ public class Camera: NSObject {
 
   private func setupAssetWriter(to outputURL: URL) -> Bool {
     assetWriter = VideoWriter()
-    if depthEnabled, let depthSize = depthResolution {
+    if depth, let depthSize = depthResolution {
       assetWriterDepthInput = VideoWriterFrameBufferInput(
         videoSize: depthSize,
         pixelFormatType: kCVPixelFormatType_OneComponent8,
@@ -230,7 +230,7 @@ public class Camera: NSObject {
     else {
       return false
     }
-    if depthEnabled {
+    if depth {
       guard
         let depthInput = assetWriterDepthInput,
         case .success = assetWriter.add(input: depthInput)
@@ -249,7 +249,7 @@ public class Camera: NSObject {
   }
 
   private func setupVideoCaptureDevice() -> Bool {
-    videoCaptureDevice = depthEnabled
+    videoCaptureDevice = depth
       ? depthEnabledCaptureDevice(withPosition: position)
       : captureDevice(withPosition: position)
     return videoCaptureDevice != nil
@@ -269,14 +269,14 @@ public class Camera: NSObject {
       return .failure(.failedToSetupDepthOutput)
     }
 
-    if depthEnabled {
+    if depth {
       if !setupDepthOutput() {
         return .failure(.failedToSetupDepthOutput)
       }
     }
 
     configureActiveFormat()
-    outputSynchronizer = depthEnabled
+    outputSynchronizer = depth
       ? AVCaptureDataOutputSynchronizer(
         dataOutputs: [videoOutput, depthOutput]
       )
@@ -408,8 +408,8 @@ public class Camera: NSObject {
         configureDepthDataConverter()
       }
       let searchDescriptor = CameraFormatSearchDescriptor(
-        depthPixelFormatTypeRule: depthEnabled ? .oneOf([depthPixelFormat]) : .any,
-        depthDimensionsRule: depthEnabled
+        depthPixelFormatTypeRule: depth ? .oneOf([depthPixelFormat]) : .any,
+        depthDimensionsRule: depth
           ? .greaterThanOrEqualTo(Size<Int>(width: 640, height: 360))
           : .any,
         videoDimensionsRule: .equalTo(resolutionPreset.landscapeSize),
