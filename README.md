@@ -22,9 +22,9 @@ cameraView.camera = camera
 cameraView.previewMode = .portrait
 
 // Configure camera
-camera.depthEnabled = false
+camera.depth = false
 camera.position = .back
-camera.resolutionPreset = .hd720p
+camera.resolution = .hd720p
 
 Camera.requestCameraPermissions { success in
   if !success {

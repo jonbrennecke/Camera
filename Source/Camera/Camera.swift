@@ -144,7 +144,7 @@ public class Camera: NSObject {
     }
   }
 
-  public var resolutionPreset: CameraResolutionPreset = .hd720p {
+  public var resolution: CameraResolutionPreset = .hd720p {
     didSet {
       cameraSetupQueue.async { [weak self] in
         guard let strongSelf = self else { return }
@@ -241,7 +241,7 @@ public class Camera: NSObject {
     return true
   }
 
-  private func setCaptureSessionPreset(withResolutionPreset preset: CameraResolutionPreset) {
+  private func setCaptureSessionPreset(withResolution preset: CameraResolutionPreset) {
     let preset: AVCaptureSession.Preset = preset.avCaptureSessionPreset
     if captureSession.canSetSessionPreset(preset) {
       captureSession.sessionPreset = preset
@@ -256,7 +256,7 @@ public class Camera: NSObject {
   }
 
   private func attemptToSetupCameraCaptureSession() -> Result<Void, CameraSetupError> {
-    setCaptureSessionPreset(withResolutionPreset: resolutionPreset)
+    setCaptureSessionPreset(withResolution: resolution)
     if !setupVideoCaptureDevice() {
       return .failure(.failedToSetupVideoCaptureDevice)
     }
@@ -412,7 +412,7 @@ public class Camera: NSObject {
         depthDimensionsRule: depth
           ? .greaterThanOrEqualTo(Size<Int>(width: 640, height: 360))
           : .any,
-        videoDimensionsRule: .equalTo(resolutionPreset.landscapeSize),
+        videoDimensionsRule: .equalTo(resolution.landscapeSize),
         frameRateRule: .greaterThanOrEqualTo(20),
         sortRule: .maximizeFrameRate,
         depthFormatSortRule: .maximizeDimensions
