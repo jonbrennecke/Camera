@@ -111,7 +111,7 @@ public class Camera: NSObject {
     }
     return Size(width: width, height: height)
   }
-  
+
   public var zoom: Float = 1.0 {
     didSet {
       cameraSetupQueue.async { [weak self] in
@@ -119,20 +119,18 @@ public class Camera: NSObject {
       }
     }
   }
-  
+
   public var supportedZoomRange: (min: Float, max: Float) {
-    get {
-      guard let videoCaptureDevice = videoCaptureDevice else {
-        return (min: 1.0, max: 1.0)
-      }
-      if depth {
-        let min = Float(videoCaptureDevice.activeFormat.videoMinZoomFactorForDepthDataDelivery)
-        let max = Float(videoCaptureDevice.activeFormat.videoMaxZoomFactorForDepthDataDelivery)
-        return (min, max)
-      }
-      let max = Float(videoCaptureDevice.activeFormat.videoMaxZoomFactor)
-      return (min: 1.0, max)
+    guard let videoCaptureDevice = videoCaptureDevice else {
+      return (min: 1.0, max: 1.0)
     }
+    if depth {
+      let min = Float(videoCaptureDevice.activeFormat.videoMinZoomFactorForDepthDataDelivery)
+      let max = Float(videoCaptureDevice.activeFormat.videoMaxZoomFactorForDepthDataDelivery)
+      return (min, max)
+    }
+    let max = Float(videoCaptureDevice.activeFormat.videoMaxZoomFactor)
+    return (min: 1.0, max)
   }
 
   public var depth: Bool = false {
@@ -167,7 +165,7 @@ public class Camera: NSObject {
       outputSemaphore.signal()
     }
   }
-  
+
   private func withLockedVideoCaptureDevice(_ callback: (AVCaptureDevice) -> Void) {
     guard
       let videoCaptureDevice = videoCaptureDevice,
@@ -180,7 +178,7 @@ public class Camera: NSObject {
     }
     callback(videoCaptureDevice)
   }
-  
+
   private func updateZoom() {
     withLockedVideoCaptureDevice { device in
       let (min, max) = supportedZoomRange
