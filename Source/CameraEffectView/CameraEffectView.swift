@@ -139,10 +139,23 @@ open class CameraEffectView: MTKView {
   }
 
   public func captureDevicePointConverted(fromLayerPoint layerPoint: CGPoint) -> CGPoint {
-    let scale = scaleForResizing(imageExtent.size, to: frame.size, resizeMode: resizeMode)
+    guard let videoSize = camera?.videoResolution else {
+      return .zero
+    }
+    let scale = scaleForResizing(videoSize.cgSize(), to: frame.size, resizeMode: resizeMode)
+    let scaledSize = Size<Float>(
+      width: Float(videoSize.width) * Float(scale),
+      height: Float(videoSize.height) * Float(scale)
+    )
+    let yMin = abs(Float(frame.size.height) - scaledSize.height) * 0.5
+    let yMax = yMin + scaledSize.height
+    let xMin = abs(Float(frame.size.width) - scaledSize.width) * 0.5
+    let xMax = xMin + scaledSize.width
+    let clampedX = clamp(Float(layerPoint.x), min: xMin, max: xMax) - xMin
+    let clampedY = clamp(Float(layerPoint.y), min: yMin, max: yMax) - yMin
     return CGPoint(
-      x: abs((layerPoint.x / scale) / frame.width),
-      y: abs(1 - (layerPoint.y / scale) / frame.height)
+      x: CGFloat(clampedY / scaledSize.height),
+      y: CGFloat(1 - (clampedX / scaledSize.width))
     )
   }
 }

@@ -33,6 +33,15 @@ class ViewController: UIViewController {
   @objc func onPressSwitchCameraButton() {
     camera.position = camera.position == .front ? .back : .front
   }
+  
+  override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+    super.touchesEnded(touches, with: event)
+    guard let touch = touches.first else { return }
+    let layerPoint = touch.location(in: cameraView)
+    let point = cameraView.captureDevicePointConverted(fromLayerPoint: layerPoint)
+    camera.focus(on: point)
+    camera.exposure(on: point)
+  }
 
   override func viewDidLoad() {
     super.viewDidLoad()

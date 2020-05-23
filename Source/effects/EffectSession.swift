@@ -65,7 +65,11 @@ public class EffectSession {
         guard let videoPixelBuffer = videoPixelBuffer else {
           return nil
         }
-        return createCenteredAndResizedImage(withPixelBuffer: videoPixelBuffer, size: size, resizeMode: resizeMode)
+        return createCenteredAndResizedImage(
+          withPixelBuffer: videoPixelBuffer,
+          size: size,
+          resizeMode: resizeMode
+        )
       }
 
       // render depth and portrait preview modes
