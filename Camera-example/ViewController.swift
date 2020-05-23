@@ -37,8 +37,8 @@ class ViewController: UIViewController {
   override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
     super.touchesEnded(touches, with: event)
     guard let touch = touches.first else { return }
-    let layerPoint = touch.location(in: cameraView)
-    let point = cameraView.captureDevicePointConverted(fromLayerPoint: layerPoint)
+    let viewPoint = touch.location(in: cameraView)
+    let point = cameraView.captureDevicePointConverted(fromView: viewPoint)
     camera.focus(on: point)
     camera.exposure(on: point)
   }
