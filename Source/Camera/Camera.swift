@@ -50,7 +50,7 @@ public class Camera: NSObject {
   private var unsafeInternalState: UnsafeInternalState = UnsafeInternalState(
     depth: false,
     zoom: 1.0,
-    exposure: 10,
+    exposure: 0,
     resolution: .hd720p,
     position: .front // TODO: save defaults as constants
   )
@@ -168,6 +168,7 @@ public class Camera: NSObject {
     }
     set {
       safelyWriteInternalState { [weak self] in
+        self?.unsafeInternalState.zoom = newValue
         self?.unsafeUpdateZoom()
       }
     }
@@ -236,6 +237,7 @@ public class Camera: NSObject {
     }
     set {
       safelyWriteInternalState { [weak self] in
+        self?.unsafeInternalState.exposure = newValue
         self?.unsafeUpdateExposure()
       }
     }
