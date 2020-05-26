@@ -28,24 +28,31 @@ public class Camera: NSObject {
   private class UnsafeInternalState {
     var depth: Bool
     var zoom: Float
+    var exposure: Float
     var resolution: CameraResolutionPreset
     var position: AVCaptureDevice.Position
 
     init(
       depth: Bool,
       zoom: Float,
+      exposure: Float,
       resolution: CameraResolutionPreset,
       position: AVCaptureDevice.Position
     ) {
       self.depth = depth
       self.zoom = zoom
+      self.exposure = exposure
       self.resolution = resolution
       self.position = position
     }
   }
 
   private var unsafeInternalState: UnsafeInternalState = UnsafeInternalState(
-    depth: false, zoom: 1.0, resolution: .hd720p, position: .front // TODO: save defaults as constants
+    depth: false,
+    zoom: 1.0,
+    exposure: 10,
+    resolution: .hd720p,
+    position: .front // TODO: save defaults as constants
   )
 
   private func safelyWriteInternalState(_ callback: @escaping () -> Void) {
@@ -221,6 +228,29 @@ public class Camera: NSObject {
     }
   }
 
+  public var exposure: Float {
+    get {
+      safelyReadInternalState {
+        unsafeInternalState.exposure
+      }
+    }
+    set {
+      safelyWriteInternalState { [weak self] in
+        self?.unsafeUpdateExposure()
+      }
+    }
+  }
+
+  public var supportedExposureRange: (min: Float, max: Float) {
+    guard let videoCaptureDevice = videoCaptureDevice else {
+      return (min: 0, max: 0)
+    }
+    return (
+      min: videoCaptureDevice.minExposureTargetBias,
+      max: videoCaptureDevice.maxExposureTargetBias
+    )
+  }
+
   deinit {
     for _ in 0 ..< maxSimultaneousFrames {
       outputSemaphore.signal()
@@ -245,6 +275,15 @@ public class Camera: NSObject {
       let (min, max) = supportedZoomRange
       let clampedZoom = clamp(unsafeInternalState.zoom, min: min, max: max)
       device.videoZoomFactor = CGFloat(clampedZoom)
+    }
+  }
+
+  private func unsafeUpdateExposure() {
+    withLockedVideoCaptureDevice { device in
+      device.exposureMode = .locked
+      let (min, max) = supportedExposureRange
+      let clampedExposure = clamp(unsafeInternalState.exposure, min: min, max: max)
+      device.setExposureTargetBias(clampedExposure)
     }
   }
 
@@ -520,9 +559,8 @@ public class Camera: NSObject {
     }
   }
 
-  public func focus(on point: CGPoint) {
+  public func setAutoFocusPoint(_ point: CGPoint) {
     withLockedVideoCaptureDevice { device in
-      // set focus point
       if device.isFocusPointOfInterestSupported {
         device.focusPointOfInterest = point
         if device.isFocusModeSupported(.autoFocus) {
@@ -531,10 +569,9 @@ public class Camera: NSObject {
       }
     }
   }
-  
-  public func exposure(on point: CGPoint) {
+
+  public func setAutoExposurePoint(_ point: CGPoint) {
     withLockedVideoCaptureDevice { device in
-      // set exposure point
       if device.isExposurePointOfInterestSupported {
         device.exposurePointOfInterest = point
         if device.isExposureModeSupported(.autoExpose) {
@@ -590,25 +627,6 @@ public class Camera: NSObject {
       videoCaptureDevice.unlockForConfiguration()
     } else {
       completionHandler()
-    }
-  }
-
-  public var supportedExposureRange: (min: Float, max: Float) {
-    guard let videoCaptureDevice = videoCaptureDevice else {
-      return (min: 0, max: 0)
-    }
-    return (
-      min: videoCaptureDevice.minExposureTargetBias,
-      max: videoCaptureDevice.maxExposureTargetBias
-    )
-  }
-
-  public func setExposure(_ exposureBias: Float, _ completionHandler: @escaping () -> Void) {
-    withLockedVideoCaptureDevice { device in
-      device.exposureMode = .locked
-      device.setExposureTargetBias(exposureBias) { _ in
-        completionHandler()
-      }
     }
   }
 
