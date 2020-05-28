@@ -18,5 +18,5 @@ end
 
 target 'Player-example' do
   pod 'ImageUtils', '0.0.5'
-  pod 'VideoEffects', '0.0.27'
+  pod 'VideoEffects', '0.0.28'
 end
