@@ -10,6 +10,7 @@
 		2D20B5F083D2CC533E970E72 /* Pods_Camera.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E47FF01F57167EE579FFFC23 /* Pods_Camera.framework */; };
 		BAB73A4CA539108E44C1FC96 /* Pods_Player_example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2CBC7796F62FFA2748C575A /* Pods_Player_example.framework */; };
 		D9E1237766A75F8511D76A58 /* Pods_Camera_example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 423BB64A035612306FF8B94C /* Pods_Camera_example.framework */; };
+		FCD900532480D12700B66869 /* depth-example.mov in Resources */ = {isa = PBXBuildFile; fileRef = FCD900522480D12700B66869 /* depth-example.mov */; };
 		FCF50961246BCA4900A114B2 /* CameraResolutionObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCF50953246BCA4900A114B2 /* CameraResolutionObserver.swift */; };
 		FCF50963246BCA4900A114B2 /* Camera.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCF50955246BCA4900A114B2 /* Camera.swift */; };
 		FCF50965246BCA4900A114B2 /* CameraResolutionPreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCF50956246BCA4900A114B2 /* CameraResolutionPreset.swift */; };
@@ -41,7 +42,6 @@
 		FCF509CA246DD38100A114B2 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FCF509C8246DD38100A114B2 /* Main.storyboard */; };
 		FCF509CC246DD38200A114B2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FCF509CB246DD38200A114B2 /* Assets.xcassets */; };
 		FCF509CF246DD38200A114B2 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FCF509CD246DD38200A114B2 /* LaunchScreen.storyboard */; };
-		FCF509D8246DE4F300A114B2 /* depth-example.MOV in Resources */ = {isa = PBXBuildFile; fileRef = FCF509D7246DE4F300A114B2 /* depth-example.MOV */; };
 		FCF509DB246DE6EB00A114B2 /* DepthBlurFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCF509DA246DE6EB00A114B2 /* DepthBlurFilter.swift */; };
 		FCF509DD246DE82300A114B2 /* asset.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCF509DC246DE82300A114B2 /* asset.swift */; };
 		FCF509DE246DEC4C00A114B2 /* libCamera.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FCDE79B02463E9B000D8A8AF /* libCamera.a */; };
@@ -94,6 +94,7 @@
 		E47FF01F57167EE579FFFC23 /* Pods_Camera.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Camera.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		ED2971642150620600B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS12.0.sdk/System/Library/Frameworks/JavaScriptCore.framework; sourceTree = DEVELOPER_DIR; };
+		FCD900522480D12700B66869 /* depth-example.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = "depth-example.mov"; sourceTree = "<group>"; };
 		FCDE79B02463E9B000D8A8AF /* libCamera.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCamera.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		FCF50953246BCA4900A114B2 /* CameraResolutionObserver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CameraResolutionObserver.swift; sourceTree = "<group>"; };
 		FCF50955246BCA4900A114B2 /* Camera.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Camera.swift; sourceTree = "<group>"; };
@@ -129,7 +130,6 @@
 		FCF509CB246DD38200A114B2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FCF509CE246DD38200A114B2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		FCF509D0246DD38200A114B2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		FCF509D7246DE4F300A114B2 /* depth-example.MOV */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = "depth-example.MOV"; sourceTree = "<group>"; };
 		FCF509DA246DE6EB00A114B2 /* DepthBlurFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepthBlurFilter.swift; sourceTree = "<group>"; };
 		FCF509DC246DE82300A114B2 /* asset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = asset.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -296,7 +296,7 @@
 		FCF509C1246DD38100A114B2 /* Player-example */ = {
 			isa = PBXGroup;
 			children = (
-				FCF509D7246DE4F300A114B2 /* depth-example.MOV */,
+				FCD900522480D12700B66869 /* depth-example.mov */,
 				FCF509C2246DD38100A114B2 /* AppDelegate.swift */,
 				FCF509C4246DD38100A114B2 /* SceneDelegate.swift */,
 				FCF509C6246DD38100A114B2 /* ViewController.swift */,
@@ -439,10 +439,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FCD900532480D12700B66869 /* depth-example.mov in Resources */,
 				FCF509CF246DD38200A114B2 /* LaunchScreen.storyboard in Resources */,
 				FCF509CC246DD38200A114B2 /* Assets.xcassets in Resources */,
 				FCF509CA246DD38100A114B2 /* Main.storyboard in Resources */,
-				FCF509D8246DE4F300A114B2 /* depth-example.MOV in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
