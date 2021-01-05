@@ -133,10 +133,17 @@ open class CameraEffectView: MTKView {
         commandBuffer.addCompletedHandler { [weak self] _ in
             self?.renderSemaphore.signal()
         }
-//        commandBuffer.present(drawable, afterMinimumDuration: 1 / CFTimeInterval(preferredFramesPerSecond))
-        commandBuffer.addScheduledHandler { _ in
-            drawable.present(afterMinimumDuration: 1 / CFTimeInterval(self.preferredFramesPerSecond))
-        }
+      
+        // ideally this would use afterMinimumDuration, but our cocoapods setup
+        // complains that that method is not available...
+        //
+        // commandBuffer.present(
+        //  drawable,
+        //  afterMinimumDuration: 1 / CFTimeInterval(preferredFramesPerSecond)
+        // )
+        //
+        // So instead we just call "present(drawable)".
+        commandBuffer.present(drawable)
     }
 }
 
