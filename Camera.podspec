@@ -10,7 +10,7 @@ Pod::Spec.new do |s|
   s.cocoapods_version = '>= 1.2.0'
   s.license = 'AGPL'
   s.summary = 'Swift library of camera and video utilities'
-  s.swift_versions = '5'
+  s.swift_version = '5'
   s.default_subspec = "Default"
 
   s.subspec 'Default' do |ss|
