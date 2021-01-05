@@ -5,8 +5,8 @@ public func getVideoAndDepthTrackAssociation(for asset: AVAsset) ->
     let depthTrack = asset.tracks.first(where: { isGrayscaleVideoTrack($0) })
     let videoTrack = asset.tracks.first(where: { isColorVideoTrack($0) })
     return (
-        depthTrack: depthTrack?.trackID,
-        videoTrack: videoTrack?.trackID
+        videoTrack: videoTrack?.trackID,
+        depthTrack: depthTrack?.trackID
     )
 }
 
