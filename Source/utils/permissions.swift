@@ -65,7 +65,7 @@ private func authorizeMediaLibrary(_ callback: @escaping (Bool) -> Void) {
         case .restricted:
             return callback(false)
         case .limited:
-          return callback(true)
+            return callback(true)
         @unknown default:
             return callback(false)
         }

@@ -133,7 +133,7 @@ open class CameraEffectView: MTKView {
         commandBuffer.addCompletedHandler { [weak self] _ in
             self?.renderSemaphore.signal()
         }
-        commandBuffer.present(drawable, afterMinimumDuration: 1 / Double(preferredFramesPerSecond))
+        commandBuffer.present(drawable, atTime: CFAbsoluteTimeGetCurrent() + 1 / Double(preferredFramesPerSecond))
     }
 }
 
