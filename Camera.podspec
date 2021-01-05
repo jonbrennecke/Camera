@@ -5,7 +5,7 @@ Pod::Spec.new do |s|
   s.version = version
   s.homepage = 'https://github.com/jonbrennecke/Camera'
   s.author = 'Jon Brennecke'
-  s.platforms = { :ios => '12.0' }
+  s.platforms = { :ios => '13.0' }
   s.source = { :git => 'https://github.com/jonbrennecke/Camera.git', :tag => "v#{version}" }
   s.cocoapods_version = '>= 1.2.0'
   s.license = 'AGPL'
