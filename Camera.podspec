@@ -11,7 +11,7 @@ Pod::Spec.new do |s|
   s.license = 'AGPL'
   s.summary = 'Swift library of camera and video utilities'
   s.swift_version = '5'
-  s.default_subspec = "Default"
+  # s.default_subspec = "Default"
 
   # s.subspec 'Default' do |ss|
   s.source_files = 'Source/**/*.{swift,h,m}'
