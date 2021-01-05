@@ -9,7 +9,7 @@ use_frameworks!
 
 target 'Camera' do
   pod 'ImageUtils', '0.0.6'
-  pod 'VideoEffects', '0.0.32'
+  pod 'VideoEffects', '0.0.33'
 end
 
 target 'Camera-example' do
@@ -18,5 +18,5 @@ end
 
 target 'Player-example' do
   pod 'ImageUtils', '0.0.6'
-  pod 'VideoEffects', '0.0.32'
+  pod 'VideoEffects', '0.0.33'
 end
