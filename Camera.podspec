@@ -11,11 +11,8 @@ Pod::Spec.new do |s|
   s.license = 'AGPL'
   s.summary = 'Swift library of camera and video utilities'
   s.swift_version = '5'
-  # s.default_subspec = "Default"
-
-  # s.subspec 'Default' do |ss|
+  s.ios.deployment_target  = '13.2'
   s.source_files = 'Source/**/*.{swift,h,m}'
   s.dependency 'ImageUtils'
   s.dependency 'VideoEffects'
-  # end
 end
