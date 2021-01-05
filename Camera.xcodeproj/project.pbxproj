@@ -16,8 +16,7 @@
 		FCF50965246BCA4900A114B2 /* CameraResolutionPreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCF50956246BCA4900A114B2 /* CameraResolutionPreset.swift */; };
 		FCF50969246BCA4900A114B2 /* CameraResolutionDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCF50958246BCA4900A114B2 /* CameraResolutionDelegate.swift */; };
 		FCF5096D246BCA4900A114B2 /* CameraFormatSearchDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCF5095A246BCA4900A114B2 /* CameraFormatSearchDescriptor.swift */; };
-		FCF5096F246BCA4900A114B2 /* CameraDepthDataObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCF5095B246BCA4900A114B2 /* CameraDepthDataObserver.swift */; };
-		FCF50971246BCA4900A114B2 /* CameraManagerDepthDataDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCF5095C246BCA4900A114B2 /* CameraManagerDepthDataDelegate.swift */; };
+		FCF50971246BCA4900A114B2 /* CameraDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCF5095C246BCA4900A114B2 /* CameraDelegate.swift */; };
 		FCF50977246BCB4900A114B2 /* observers.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCF50975246BCB4900A114B2 /* observers.swift */; };
 		FCF5097A246BCC7B00A114B2 /* permissions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCF50978246BCC7B00A114B2 /* permissions.swift */; };
 		FCF50986246BCEF300A114B2 /* camera.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCF50984246BCEF300A114B2 /* camera.swift */; };
@@ -101,8 +100,7 @@
 		FCF50956246BCA4900A114B2 /* CameraResolutionPreset.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CameraResolutionPreset.swift; sourceTree = "<group>"; };
 		FCF50958246BCA4900A114B2 /* CameraResolutionDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CameraResolutionDelegate.swift; sourceTree = "<group>"; };
 		FCF5095A246BCA4900A114B2 /* CameraFormatSearchDescriptor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CameraFormatSearchDescriptor.swift; sourceTree = "<group>"; };
-		FCF5095B246BCA4900A114B2 /* CameraDepthDataObserver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CameraDepthDataObserver.swift; sourceTree = "<group>"; };
-		FCF5095C246BCA4900A114B2 /* CameraManagerDepthDataDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CameraManagerDepthDataDelegate.swift; sourceTree = "<group>"; };
+		FCF5095C246BCA4900A114B2 /* CameraDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CameraDelegate.swift; sourceTree = "<group>"; };
 		FCF50975246BCB4900A114B2 /* observers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = observers.swift; sourceTree = "<group>"; };
 		FCF50978246BCC7B00A114B2 /* permissions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = permissions.swift; sourceTree = "<group>"; };
 		FCF50984246BCEF300A114B2 /* camera.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = camera.swift; sourceTree = "<group>"; };
@@ -240,8 +238,7 @@
 				FCF50956246BCA4900A114B2 /* CameraResolutionPreset.swift */,
 				FCF50958246BCA4900A114B2 /* CameraResolutionDelegate.swift */,
 				FCF5095A246BCA4900A114B2 /* CameraFormatSearchDescriptor.swift */,
-				FCF5095B246BCA4900A114B2 /* CameraDepthDataObserver.swift */,
-				FCF5095C246BCA4900A114B2 /* CameraManagerDepthDataDelegate.swift */,
+				FCF5095C246BCA4900A114B2 /* CameraDelegate.swift */,
 			);
 			path = Camera;
 			sourceTree = "<group>";
@@ -566,7 +563,7 @@
 				FCF509B4246BE08B00A114B2 /* ResizeMode.swift in Sources */,
 				FCF509B6246BE1BA00A114B2 /* EffectPreviewMode.swift in Sources */,
 				FCF509B8246BE1E400A114B2 /* scale.swift in Sources */,
-				FCF50971246BCA4900A114B2 /* CameraManagerDepthDataDelegate.swift in Sources */,
+				FCF50971246BCA4900A114B2 /* CameraDelegate.swift in Sources */,
 				FCF50965246BCA4900A114B2 /* CameraResolutionPreset.swift in Sources */,
 				FCF509DD246DE82300A114B2 /* asset.swift in Sources */,
 				FCF5096D246BCA4900A114B2 /* CameraFormatSearchDescriptor.swift in Sources */,
@@ -580,7 +577,6 @@
 				FCF509AB246BDAC600A114B2 /* CameraEffectView.swift in Sources */,
 				FCF50969246BCA4900A114B2 /* CameraResolutionDelegate.swift in Sources */,
 				FCF50986246BCEF300A114B2 /* camera.swift in Sources */,
-				FCF5096F246BCA4900A114B2 /* CameraDepthDataObserver.swift in Sources */,
 				FCF50977246BCB4900A114B2 /* observers.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -1,5 +1,5 @@
 public enum EffectPreviewMode: Int {
-  case normal
-  case depth
-  case portrait
+    case normal
+    case depth
+    case portrait
 }
