@@ -7,7 +7,7 @@ if [ -z "$(git status --porcelain)" ]; then
   git tag "v$version"
   git push origin master
   git push origin master --tags
-  pod repo push private-pod-specs Camera.podspec --allow-warnings --swift-version=5
+  pod repo push --swift-version=5 private-pod-specs Camera.podspec --allow-warnings
 else 
   echo "Error: Git has uncommitted changes."
   exit 1
