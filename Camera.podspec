@@ -16,6 +16,6 @@ Pod::Spec.new do |s|
   s.subspec 'Default' do |ss|
     ss.source_files = 'Source/**/*.{swift,h,m}'
     ss.dependency 'ImageUtils', '0.0.6'
-    ss.dependency 'VideoEffects', '0.0.30'
+    ss.dependency 'VideoEffects', '0.0.33'
   end
 end
