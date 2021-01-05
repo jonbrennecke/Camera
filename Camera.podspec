@@ -1,4 +1,4 @@
-version = '0.0.14-dev3'
+version = '0.0.14-dev4'
 
 Pod::Spec.new do |s|
   s.name = 'Camera'
