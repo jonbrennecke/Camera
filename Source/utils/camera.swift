@@ -1,6 +1,5 @@
 import AVFoundation
 
-@available(iOS 11.1, *)
 internal func depthEnabledCaptureDevice(withPosition position: AVCaptureDevice.Position) -> AVCaptureDevice? {
     let discoverySession = AVCaptureDevice.DiscoverySession(deviceTypes: [
         .builtInTrueDepthCamera,
@@ -17,7 +16,6 @@ internal func captureDevice(withPosition position: AVCaptureDevice.Position) -> 
     return discoverySession.devices.first
 }
 
-@available(iOS 11.1, *)
 internal func getDepthEnabledCaptureDevices(withPosition position: AVCaptureDevice.Position) -> [AVCaptureDevice] {
     let discoverySession = AVCaptureDevice.DiscoverySession(deviceTypes: [
         .builtInTrueDepthCamera,

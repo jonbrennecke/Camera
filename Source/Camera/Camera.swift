@@ -799,7 +799,6 @@ public class Camera: NSObject {
     }
 }
 
-@available(iOS 11.0, *)
 extension Camera: AVCaptureDataOutputSynchronizerDelegate {
     public func dataOutputSynchronizer(
         _: AVCaptureDataOutputSynchronizer, didOutput collection: AVCaptureSynchronizedDataCollection

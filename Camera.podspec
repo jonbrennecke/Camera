@@ -5,7 +5,7 @@ Pod::Spec.new do |s|
   s.version = version
   s.homepage = 'https://github.com/jonbrennecke/Camera'
   s.author = 'Jon Brennecke'
-  s.platforms = { :ios => '13.0' }
+  s.platforms = { :ios => '13.2' }
   s.source = { :git => 'https://github.com/jonbrennecke/Camera.git', :tag => "v#{version}" }
   s.cocoapods_version = '>= 1.2.0'
   s.license = 'AGPL'
@@ -15,7 +15,7 @@ Pod::Spec.new do |s|
 
   s.subspec 'Default' do |ss|
     ss.source_files = 'Source/**/*.{swift,h,m}'
-    ss.dependency 'ImageUtils', '0.0.5'
+    ss.dependency 'ImageUtils', '0.0.6'
     ss.dependency 'VideoEffects', '0.0.30'
   end
 end
