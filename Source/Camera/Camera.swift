@@ -10,14 +10,6 @@ private let videoMaxFramesPerSecond = Int(30)
 private let maxSimultaneousFrames: Int = 3
 
 public class Camera: NSObject {
-    public enum State {
-        case none
-        case stopped(startTime: CMTime, endTime: CMTime)
-        case waitingToRecord(toURL: URL)
-        case recording(toURL: URL, startTime: CMTime)
-        case waitingForFileOutputToFinish(toURL: URL)
-    }
-
     public enum CameraSetupError: Error {
         case failedToSetupVideoCaptureDevice
         case failedToSetupVideoInput
@@ -80,12 +72,8 @@ public class Camera: NSObject {
         attributes: .concurrent
     )
 
-    fileprivate let assetWriterQueue = DispatchQueue(
-        label: "com.jonbrennecke.Camera.assetWriterQueue",
-        qos: .background
-    )
-
     private var outputSynchronizer: AVCaptureDataOutputSynchronizer?
+    private var outputSemaphore = DispatchSemaphore(value: maxSimultaneousFrames)
 
     // MARK: video
 
@@ -99,16 +87,6 @@ public class Camera: NSObject {
     private var audioCaptureDevice: AVCaptureDevice?
     private var audioCaptureDeviceInput: AVCaptureDeviceInput?
     private let audioOutput = AVCaptureAudioDataOutput()
-
-    // MARK: asset writer
-
-    private var assetWriter = VideoWriter()
-    private var assetWriterDepthInput: VideoWriterFrameBufferInput?
-    private var assetWriterVideoInput: VideoWriterFrameBufferInput?
-    private var assetWriterAudioInput: VideoWriterAudioInput?
-
-    private var depthDataConverter: AVDepthDataToPixelBufferConverter?
-    private var outputSemaphore = DispatchSemaphore(value: maxSimultaneousFrames)
 
     private lazy var clock: CMClock = {
         captureSession.masterClock ?? CMClockGetHostTimeClock()
@@ -126,18 +104,7 @@ public class Camera: NSObject {
 
     // MARK: public interface
 
-    public var state: State = .none
-
     public var paused = false
-
-    public var readyToRecord: Bool {
-        switch state {
-        case .stopped, .none:
-            return true
-        default:
-            return false
-        }
-    }
 
     // kCVPixelFormatType_32BGRA is required because of compatability with depth effects, but
     // if depth is disabled, this should be left as the default YpCbCr
@@ -313,45 +280,6 @@ public class Camera: NSObject {
         }
     }
 
-    private func unsafeSetupAssetWriter(to outputURL: URL) -> Bool {
-        assetWriter = VideoWriter()
-        if unsafeInternalState.depth, let depthSize = depthResolution {
-            assetWriterDepthInput = VideoWriterFrameBufferInput(
-                videoSize: depthSize,
-                pixelFormatType: kCVPixelFormatType_OneComponent8,
-                isRealTime: true
-            )
-        }
-        guard let videoSize = videoResolution else {
-            return false
-        }
-        assetWriterVideoInput = VideoWriterFrameBufferInput(
-            videoSize: videoSize,
-            pixelFormatType: videoPixelFormat,
-            isRealTime: true
-        )
-        assetWriterAudioInput = VideoWriterAudioInput(isRealTime: true)
-        // order is important here. If the video track is added first it will be the one visible in Photos app
-        guard
-            case .success = assetWriter.prepareToRecord(to: outputURL),
-            let audioInput = assetWriterAudioInput,
-            case .success = assetWriter.add(input: audioInput),
-            let videoInput = assetWriterVideoInput,
-            case .success = assetWriter.add(input: videoInput)
-        else {
-            return false
-        }
-        if unsafeInternalState.depth {
-            guard
-                let depthInput = assetWriterDepthInput,
-                case .success = assetWriter.add(input: depthInput)
-            else {
-                return false
-            }
-        }
-        return true
-    }
-
     private func setCaptureSessionPreset(withResolution preset: CameraResolutionPreset) {
         let preset: AVCaptureSession.Preset = preset.avCaptureSessionPreset
         if captureSession.canSetSessionPreset(preset) {
@@ -509,9 +437,6 @@ public class Camera: NSObject {
 
     private func unsafeConfigureActiveFormat() {
         withLockedVideoCaptureDevice { videoCaptureDevice in
-            defer {
-                configureDepthDataConverter()
-            }
             let searchDescriptor = CameraFormatSearchDescriptor(
                 depthPixelFormatTypeRule: unsafeInternalState.depth ? .oneOf([depthPixelFormat]) : .any,
                 depthDimensionsRule: unsafeInternalState.depth
@@ -533,18 +458,6 @@ public class Camera: NSObject {
             videoCaptureDevice
                 .activeDepthDataMinFrameDuration = CMTime(value: 1, timescale: CMTimeScale(depthMinFramesPerSecond))
         }
-    }
-
-    private func configureDepthDataConverter() {
-        guard let size = depthResolution else {
-            return
-        }
-        depthDataConverter = AVDepthDataToPixelBufferConverter(
-            size: size,
-            input: depthPixelFormat,
-            output: kCVPixelFormatType_OneComponent8,
-            bounds: unsafeInternalState.position == .front ? 0.1 ... 5 : 0 ... 0.75
-        )
     }
 
     private func unsafeResetCamera() {
@@ -695,70 +608,6 @@ public class Camera: NSObject {
         }
     }
 
-    public func startCapture(
-        withMetadata metadata: [String: Any]?,
-        completionHandler: @escaping (Error?, Bool) -> Void
-    ) {
-        cameraSetupQueue.async { [weak self] in
-            guard let strongSelf = self else { return }
-            guard strongSelf.videoCaptureDevice != nil else {
-                completionHandler(nil, false)
-                return
-            }
-            do {
-                let outputURL = try makeEmptyVideoOutputFile()
-                guard strongSelf.unsafeSetupAssetWriter(to: outputURL) else {
-                    completionHandler(nil, false)
-                    return
-                }
-                if let metadata = metadata {
-                    strongSelf.writeMetadata(metadata)
-                }
-                strongSelf.state = .waitingToRecord(toURL: outputURL)
-                strongSelf.notifyResolutionObservers()
-                let audioSession = AVAudioSession.sharedInstance()
-                try? audioSession.setCategory(.playAndRecord, options: .mixWithOthers)
-                try? audioSession.setActive(true, options: [])
-                completionHandler(nil, true)
-            } catch {
-                completionHandler(error, false)
-            }
-        }
-    }
-
-    public func stopCapture(
-        andSaveToCameraRoll saveToCameraRoll: Bool,
-        _ completionHandler: @escaping (Bool, URL?) -> Void
-    ) {
-        cameraSetupQueue.async { [weak self] in
-            guard let strongSelf = self else { return }
-            if case let .recording(_, startTime) = strongSelf.state {
-                strongSelf.assetWriterAudioInput?.finish()
-                strongSelf.assetWriterVideoInput?.finish()
-                strongSelf.assetWriterDepthInput?.finish()
-                let endTime = CMClockGetTime(strongSelf.clock)
-                strongSelf.state = .stopped(startTime: startTime, endTime: endTime)
-                strongSelf.assetWriter.stopRecording(at: endTime) { url in
-                    if saveToCameraRoll {
-                        PHPhotoLibrary.shared().performChanges(
-                            {
-                                PHAssetCreationRequest.creationRequestForAssetFromVideo(atFileURL: url)
-                            },
-                            completionHandler: { success, _ in
-                                completionHandler(success, url)
-                            }
-                        )
-                    } else {
-                        completionHandler(true, url)
-                    }
-                }
-                strongSelf.audioCaptureSession.stopRunning()
-            } else {
-                completionHandler(false, nil)
-            }
-        }
-    }
-
     public func convert(_ point: CGPoint,
                         fromView view: UIView,
                         resizeMode: ResizeMode) -> CGPoint {
@@ -781,22 +630,7 @@ public class Camera: NSObject {
             y: CGFloat(1 - (clampedX / scaledSize.width))
         )
     }
-
-    private func writeMetadata(_ metadata: [String: Any]) {
-        do {
-            let jsonData = try JSONSerialization.data(withJSONObject: metadata, options: .sortedKeys)
-            let jsonString = String(data: jsonData, encoding: .ascii)
-            let item = AVMutableMetadataItem()
-            item.keySpace = AVMetadataKeySpace.quickTimeUserData
-            item.key = AVMetadataKey.quickTimeUserDataKeyInformation as NSString
-            item.value = jsonString as NSString?
-            guard case .success = assetWriter.add(metadataItem: item) else {
-                return
-            }
-        } catch {
-            print("Failed to write JSON metadata to asset writer.")
-        }
-    }
+  
 }
 
 extension Camera: AVCaptureDataOutputSynchronizerDelegate {
@@ -816,19 +650,7 @@ extension Camera: AVCaptureDataOutputSynchronizerDelegate {
                     .some(.front)
                     ? .leftMirrored : .right
                 let depthData = synchronizedDepthData.depthData.applyingExifOrientation(orientation)
-                let disparityPixelBuffer = depthDataConverter?.convert(depthData: depthData)
-
-                startRecordingIfWaiting()
-                assetWriterQueue.async { [weak self] in
-                    guard let strongSelf = self else { return }
-                    if case .recording = strongSelf.state, let disparityPixelBuffer = disparityPixelBuffer {
-                        strongSelf.record(disparityPixelBuffer: disparityPixelBuffer, at: synchronizedDepthData.timestamp)
-                    }
-                }
-
-                if let disparityPixelBuffer = disparityPixelBuffer {
-                    delegate?.camera(self, didOutputDisparityPixelBuffer: disparityPixelBuffer, calibrationData: depthData.cameraCalibrationData)
-                }
+                delegate?.camera(self, didOutputDepthData: depthData)
             }
         }
 
@@ -836,55 +658,13 @@ extension Camera: AVCaptureDataOutputSynchronizerDelegate {
         if let synchronizedVideoData = collection
             .synchronizedData(for: videoOutput) as? AVCaptureSynchronizedSampleBufferData {
             if !synchronizedVideoData.sampleBufferWasDropped {
-                let videoPixelBuffer = PixelBuffer(sampleBuffer: synchronizedVideoData.sampleBuffer)
-
-                if let videoPixelBuffer = videoPixelBuffer {
-                    delegate?.camera(self, didOutputVideoPixelBuffer: videoPixelBuffer)
-                }
-
-                startRecordingIfWaiting()
-                assetWriterQueue.async { [weak self] in
-                    guard let strongSelf = self else { return }
-                    if case .recording = strongSelf.state, let videoPixelBuffer = videoPixelBuffer {
-                        strongSelf.record(videoPixelBuffer: videoPixelBuffer, at: synchronizedVideoData.timestamp)
-                    }
-                }
+                delegate?.camera(self, didOutputVideoSampleBuffer: synchronizedVideoData.sampleBuffer)
             }
 
             if let focusPoint = videoCaptureDevice?.focusPointOfInterest {
                 delegate?.camera(self, didFocusOn: focusPoint)
             }
         }
-    }
-
-    private func startRecordingIfWaiting() {
-        if case let .waitingToRecord(toURL: url) = state {
-            let startTime = CMClockGetTime(clock)
-            if case .success = assetWriter.startRecording(at: startTime) {
-                audioCaptureSession.usesApplicationAudioSession = true
-                audioCaptureSession.automaticallyConfiguresApplicationAudioSession = false
-                audioCaptureSession.startRunning()
-                state = .recording(toURL: url, startTime: startTime)
-            }
-        }
-    }
-
-    private func record(disparityPixelBuffer: PixelBuffer, at presentationTime: CMTime) {
-        let frameBuffer = VideoFrameBuffer(
-            pixelBuffer: disparityPixelBuffer, presentationTime: presentationTime
-        )
-        assetWriterDepthInput?.append(frameBuffer)
-    }
-
-    private func record(videoPixelBuffer: PixelBuffer, at presentationTime: CMTime) {
-        let frameBuffer = VideoFrameBuffer(
-            pixelBuffer: videoPixelBuffer, presentationTime: presentationTime
-        )
-        assetWriterVideoInput?.append(frameBuffer)
-    }
-
-    private func record(audioSampleBuffer sampleBuffer: CMSampleBuffer) {
-        assetWriterAudioInput?.append(sampleBuffer)
     }
 }
 
@@ -894,12 +674,6 @@ extension Camera: AVCaptureAudioDataOutputSampleBufferDelegate {
         didOutput sampleBuffer: CMSampleBuffer,
         from _: AVCaptureConnection
     ) {
-        startRecordingIfWaiting()
-        assetWriterQueue.async { [weak self] in
-            guard let strongSelf = self else { return }
-            if case .recording = strongSelf.state {
-                strongSelf.record(audioSampleBuffer: sampleBuffer)
-            }
-        }
+      delegate?.camera(self, didOutputAudioSampleBuffer: sampleBuffer)
     }
 }

@@ -133,7 +133,7 @@ open class CameraEffectView: MTKView {
         commandBuffer.addCompletedHandler { [weak self] _ in
             self?.renderSemaphore.signal()
         }
-      
+
         // ideally this would use afterMinimumDuration, but our cocoapods setup
         // complains that that method is not available...
         //
@@ -148,12 +148,12 @@ open class CameraEffectView: MTKView {
 }
 
 extension CameraEffectView: CameraDelegate {
-    public func camera(_ camera: Camera, didOutputDisparityPixelBuffer disparityPixelBuffer: PixelBuffer, calibrationData: AVCameraCalibrationData?) {
-        effectSession.camera(camera, didOutputDisparityPixelBuffer: disparityPixelBuffer, calibrationData: calibrationData)
+    public func camera(_ camera: Camera, didOutputDepthData depthData: AVDepthData) {
+        effectSession.camera(camera, didOutputDepthData: depthData)
     }
 
-    public func camera(_ camera: Camera, didOutputVideoPixelBuffer videoPixelBuffer: PixelBuffer) {
-        effectSession.camera(camera, didOutputVideoPixelBuffer: videoPixelBuffer)
+    public func camera(_ camera: Camera, didOutputVideoSampleBuffer sampleBuffer: CMSampleBuffer) {
+        effectSession.camera(camera, didOutputVideoSampleBuffer: sampleBuffer)
     }
 
     public func camera(_ camera: Camera, didFocusOn point: CGPoint) {

@@ -4,7 +4,7 @@ import ImageUtils
 import MetalKit
 import UIKit
 
-public class EffectSession {
+public class EffectSession {  
     private lazy var depthBlurEffect = DepthBlurEffect()
 
     public var previewMode: EffectPreviewMode = .normal
@@ -48,11 +48,15 @@ public class EffectSession {
 
     internal func makeEffectImage(blurAperture: Float = 2.5, size: CGSize, resizeMode: ResizeMode) -> CIImage? {
         return autoreleasepool {
+            guard
+                let sampleBuffer = videoSampleBuffer,
+                let videoPixelBuffer = PixelBuffer(sampleBuffer: sampleBuffer)
+            else {
+                return nil
+            }
+
             // render unaltered video frames in "normal" preview mode
             if case .normal = previewMode {
-                guard let videoPixelBuffer = videoPixelBuffer else {
-                    return nil
-                }
                 return createCenteredAndResizedImage(
                     withPixelBuffer: videoPixelBuffer,
                     size: size,
@@ -61,12 +65,10 @@ public class EffectSession {
             }
 
             // render depth and portrait preview modes
-            guard
-                let disparityPixelBuffer = disparityPixelBuffer,
-                let videoPixelBuffer = videoPixelBuffer
-            else {
+            guard let depthData = depthData else {
                 return nil
             }
+            let disparityPixelBuffer = PixelBuffer(depthData: depthData)
             guard
                 let videoImage = createCenteredAndResizedImage(withPixelBuffer: videoPixelBuffer, size: size,
                                                                resizeMode: resizeMode),
@@ -85,23 +87,20 @@ public class EffectSession {
 
     // MARK: - Objective-C interface
 
-    public var disparityPixelBuffer: PixelBuffer?
+    public var depthData: AVDepthData?
 
-    public var calibrationData: AVCameraCalibrationData?
-
-    public var videoPixelBuffer: PixelBuffer?
+    public var videoSampleBuffer: CMSampleBuffer?
 
     public var focusPoint: CGPoint?
 }
 
 extension EffectSession: CameraDelegate {
-    public func camera(_: Camera, didOutputDisparityPixelBuffer disparityPixelBuffer: PixelBuffer, calibrationData: AVCameraCalibrationData?) {
-        self.disparityPixelBuffer = disparityPixelBuffer
-        self.calibrationData = calibrationData
+    public func camera(_: Camera, didOutputDepthData depthData: AVDepthData) {
+        self.depthData = depthData
     }
 
-    public func camera(_: Camera, didOutputVideoPixelBuffer videoPixelBuffer: PixelBuffer) {
-        self.videoPixelBuffer = videoPixelBuffer
+    public func camera(_: Camera, didOutputVideoSampleBuffer sampleBuffer: CMSampleBuffer) {
+        videoSampleBuffer = sampleBuffer
     }
 
     public func camera(_: Camera, didFocusOn point: CGPoint) {

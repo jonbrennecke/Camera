@@ -9,15 +9,7 @@ class ViewController: UIViewController {
     let switchCameraButton = UIButton()
 
     @objc func onPressShutter() {
-        if camera.readyToRecord {
-            camera.startCapture(withMetadata: nil) { _, _ in
-                print("started capture")
-            }
-        } else {
-            camera.stopCapture(andSaveToCameraRoll: true) { _, url in
-                print("stopped capture: \(String(describing: url?.absoluteString))")
-            }
-        }
+        // TODO
     }
 
     @objc func onPressDepthButton() {
