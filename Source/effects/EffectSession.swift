@@ -4,7 +4,7 @@ import ImageUtils
 import MetalKit
 import UIKit
 
-public class EffectSession {  
+public class EffectSession {
     private lazy var depthBlurEffect = DepthBlurEffect()
 
     public var previewMode: EffectPreviewMode = .normal

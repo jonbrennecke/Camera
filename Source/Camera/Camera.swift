@@ -630,7 +630,6 @@ public class Camera: NSObject {
             y: CGFloat(1 - (clampedX / scaledSize.width))
         )
     }
-  
 }
 
 extension Camera: AVCaptureDataOutputSynchronizerDelegate {
@@ -674,6 +673,6 @@ extension Camera: AVCaptureAudioDataOutputSampleBufferDelegate {
         didOutput sampleBuffer: CMSampleBuffer,
         from _: AVCaptureConnection
     ) {
-      delegate?.camera(self, didOutputAudioSampleBuffer: sampleBuffer)
+        delegate?.camera(self, didOutputAudioSampleBuffer: sampleBuffer)
     }
 }

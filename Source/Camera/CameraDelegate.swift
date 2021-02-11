@@ -8,18 +8,19 @@ public protocol CameraDelegate {
 }
 
 extension CameraDelegate {
-  func camera(_ camera: Camera, didOutputDepthData depthData: AVDepthData) {
-      // noop
-  }
-  
-  func camera(_ camera: Camera, didOutputVideoSampleBuffer videoSampleBuffer: CMSampleBuffer) {
-    // noop
-  }
-  public func camera(_ camera: Camera, didOutputAudioSampleBuffer audioSampleBuffer: CMSampleBuffer) {
-    // noop
-  }
-  
-  func camera(_ camera: Camera, didFocusOn point: CGPoint) {
-    // noop
-  }
+    func camera(_: Camera, didOutputDepthData _: AVDepthData) {
+        // noop
+    }
+
+    func camera(_: Camera, didOutputVideoSampleBuffer _: CMSampleBuffer) {
+        // noop
+    }
+
+    public func camera(_: Camera, didOutputAudioSampleBuffer _: CMSampleBuffer) {
+        // noop
+    }
+
+    func camera(_: Camera, didFocusOn _: CGPoint) {
+        // noop
+    }
 }

@@ -9,7 +9,7 @@ class ViewController: UIViewController {
     let switchCameraButton = UIButton()
 
     @objc func onPressShutter() {
-        // TODO
+        // TODO:
     }
 
     @objc func onPressDepthButton() {
