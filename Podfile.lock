@@ -4,18 +4,29 @@ PODS:
     - ImageUtils
 
 DEPENDENCIES:
-  - ImageUtils (= 0.0.6)
-  - VideoEffects (= 0.0.33)
+  - "ImageUtils (from `git@github.com:jonbrennecke/ImageUtils.git`, tag `v0.0.6`)"
+  - "VideoEffects (from `git@github.com:jonbrennecke/VideoEffects.git`, tag `v0.0.33`)"
 
-SPEC REPOS:
-  https://github.com/jonbrennecke/private-pod-specs.git:
-    - ImageUtils
-    - VideoEffects
+EXTERNAL SOURCES:
+  ImageUtils:
+    :git: "git@github.com:jonbrennecke/ImageUtils.git"
+    :tag: v0.0.6
+  VideoEffects:
+    :git: "git@github.com:jonbrennecke/VideoEffects.git"
+    :tag: v0.0.33
+
+CHECKOUT OPTIONS:
+  ImageUtils:
+    :git: "git@github.com:jonbrennecke/ImageUtils.git"
+    :tag: v0.0.6
+  VideoEffects:
+    :git: "git@github.com:jonbrennecke/VideoEffects.git"
+    :tag: v0.0.33
 
 SPEC CHECKSUMS:
-  ImageUtils: d3c6cd535a476e4fe5ef349157b3c4a4bc2f18c6
-  VideoEffects: 6f849f06112c74859f4864359b502986e082c2f0
+  ImageUtils: a46a092b607619764e078b726bad9874739fbde5
+  VideoEffects: c8f6faf4f36afcd08b0843437988ac86c9fe0a3e
 
-PODFILE CHECKSUM: 9e274a4795458fc3f996a8483e4916b3ed29a82e
+PODFILE CHECKSUM: ef7e26f6547ce0b1c1f92d7b868758efdd91f04f
 
-COCOAPODS: 1.8.4
+COCOAPODS: 1.9.3
